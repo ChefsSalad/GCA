@@ -4,7 +4,8 @@ from torch.utils.data import DataLoader, TensorDataset
 import random
 from model import *
 from utils.cross_data_processor import *
-from utils.cross_GAN_trainer import  *
+from utils.multiGAN_trainer import  *
+
 def triple_gan_all_pipeline(
         data_path,
         output_dir,
@@ -82,9 +83,19 @@ def triple_gan_all_pipeline(
     test_x2 = test_x2.to(device)
     test_x3 = test_x3.to(device)
 
-    results=train_triple_gan(modelG1, modelG2, modelG3, modelD1, modelD2, modelD3, trainDataloader1, trainDataloader2,
-                     trainDataloader3, window_size1, window_size2, window_size3, y_scaler, train_x1,
-                     train_x2, train_x3, train_y1, test_x1, test_x2, test_x3, test_y1,distill,num_epoch,
-                     output_dir,device)
+    results = train_multi_gan([modelG1, modelG2, modelG3],
+                              [modelD1, modelD2, modelD3],
+                              [trainDataloader1, trainDataloader2, trainDataloader3],
+                              [window_size1, window_size2, window_size3],
+                              y_scaler,
+                              [train_x1, train_x2, train_x3],
+                              train_y1,
+                              [test_x1, test_x2, test_x3],
+                              test_y1,
+                              distill,
+                              num_epoch,
+                              output_dir,
+                              device)
+
     return results
 

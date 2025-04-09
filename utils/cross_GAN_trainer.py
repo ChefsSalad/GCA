@@ -942,13 +942,13 @@ def refine_best_models_with_real_data_v2(
             loss.backward()
             d_optimizer.step()
 
-    # 使用 torch.multiprocessing 并行跑 G 和 D
-    import torch.multiprocessing as mp
-    p1 = mp.Process(target=train_generator)
-    p2 = mp.Process(target=train_discriminator)
-    p1.start()
-    p2.start()
-    p1.join()
-    p2.join()
+    # # 使用 torch.multiprocessing 并行跑 G 和 D
+    # import torch.multiprocessing as mp
+    # p1 = mp.Process(target=train_generator)
+    # p2 = mp.Process(target=train_discriminator)
+    # p1.start()
+    # p2.start()
+    # p1.join()
+    # p2.join()
 
 

@@ -13,7 +13,7 @@ def run_experiments(data_path, output_dir, window_size1, window_size2, window_si
 
     # 定义特征和目标列的组合
 
-    #feature_columns = list(range(92, 105))
+    # feature_columns = list(range(2,56))
     feature_columns = []
     # feature_columns = list(range(35,36))
     # target_columns = [[i] for i in range(1, 22)]
@@ -72,10 +72,10 @@ if __name__ == "__main__":
     parser.add_argument('--window_size1', type=int, help="Window size for first dimension", default=5)
     parser.add_argument('--window_size2', type=int, help="Window size for second dimension", default=10)
     parser.add_argument('--window_size3', type=int, help="Window size for third dimension", default=15)
-    parser.add_argument('--distill', type=bool, help="Whether to do distillation", default=False)
+    parser.add_argument('--distill', type=bool, help="Whether to do distillation", default=True)
     parser.add_argument('--device', type=int, help="Window size for third dimension", default=0)
 
-    parser.add_argument('--num_epoch', type=int, help="epoch", default=10000)
+    parser.add_argument('--num_epoch', type=int, help="epoch", default=50)
     parser.add_argument('--batch_size', type=int, help="Batch size for training", default=64)
     parser.add_argument('--train_split', type=float, help="Train-test split ratio", default=0.8)
     parser.add_argument('--random_seed', type=int, help="Random seed for reproducibility", default=3407)

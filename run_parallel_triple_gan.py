@@ -98,7 +98,7 @@ if __name__ == "__main__":
     parser.add_argument('--window_size2', type=int, default=10)
     parser.add_argument('--window_size3', type=int, default=20)
     parser.add_argument('--distill', type=bool, default=False)
-    parser.add_argument('--num_epoch', type=int, default=10000)
+    parser.add_argument('--num_epoch', type=int, default=5)
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--train_split', type=float, default=0.8)
     parser.add_argument('--random_seed', type=int, default=3407)
