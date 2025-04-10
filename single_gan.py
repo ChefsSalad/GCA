@@ -1,7 +1,5 @@
-import numpy as np
-import torch
 from utils.evaluate_visualization import *
-from model import *
+from models.model import *
 from utils.single_data_processor import *
 import random
 from utils.single_GAN_trainer import *

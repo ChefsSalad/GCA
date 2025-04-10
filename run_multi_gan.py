@@ -1,17 +1,25 @@
-import os
-import pandas as pd
 import argparse
-from triple_gan import *
+from time_series_gca import GCA_time_series
+import pandas as pd
+import os
 
-def run_experiments(data_path, output_dir, window_size1, window_size2, window_size3, distill,num_epoch,batch_size,
-                    train_split, random_seed,device):
+
+def run_experiments(args):
     # 创建保存结果的CSV文件
-    results_file = os.path.join(output_dir, "gca_GT_NPDC_market.csv")
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    results_file = os.path.join(args.output_dir, "gca_GT_NPDC_market.csv")
+    if not os.path.exists(args.output_dir):
+        os.makedirs(args.output_dir)
         print("Output directory created")
 
-    # 定义特征和目标列的组合
+    gca = GCA_time_series(args.N_pairs, args.batch_size, args.num_epochs,
+                          args.generators, args.discriminators,
+                          args.ckpt_dir, args.output_dir,
+                          args.window_sizes,
+                          initial_learning_rate=args.lr,
+                          train_split=args.train_split,
+                          do_distill= args.distill,
+                          device=args.device,
+                          seed=args.random_seed)
 
     # feature_columns = list(range(2,56))
     feature_columns = []
@@ -19,7 +27,6 @@ def run_experiments(data_path, output_dir, window_size1, window_size2, window_si
     # target_columns = [[i] for i in range(1, 22)]
     target_columns = [list(range(1, 2))]
 
-    # 逐个组合进行实验
     for target in target_columns:
         # for target,feature in zip(target_columns,feature_columns):
         # 运行实验，获取结果
@@ -30,21 +37,10 @@ def run_experiments(data_path, output_dir, window_size1, window_size2, window_si
         # target_feature_columns.append(target)
         print("using features:", target_feature_columns)
 
-        results = triple_gan_all_pipeline(
-            data_path=data_path,
-            output_dir=output_dir,
-            feature_columns=target_feature_columns,
-            target_columns=target,
-            window_size1=window_size1,
-            window_size2=window_size2,
-            window_size3=window_size3,
-            distill=distill,
-            num_epoch=num_epoch,
-            batch_size=batch_size,
-            train_split=train_split,
-            random_seed=random_seed,
-            device=device
-        )
+        gca.process_data(args.data_path, target, target_feature_columns)
+        gca.init_dataloader()
+        gca.init_model()
+        results = gca.train()
 
         # 将结果保存到CSV
         result_row = {
@@ -64,18 +60,26 @@ def run_experiments(data_path, output_dir, window_size1, window_size2, window_si
         df = pd.DataFrame([result_row])
         df.to_csv(results_file, mode='a', header=not pd.io.common.file_exists(results_file), index=False)
 
+
 if __name__ == "__main__":
     # 使用argparse解析命令行参数
     parser = argparse.ArgumentParser(description="Run experiments for triple GAN model")
-    parser.add_argument('--data_path', type=str, required=False, help="Path to the input data file",default="database/cleaned_data.csv")
-    parser.add_argument('--output_dir', type=str, required=False, help="Directory to save the output",default="out_put/4_all")
-    parser.add_argument('--window_size1', type=int, help="Window size for first dimension", default=5)
-    parser.add_argument('--window_size2', type=int, help="Window size for second dimension", default=10)
-    parser.add_argument('--window_size3', type=int, help="Window size for third dimension", default=15)
+    parser.add_argument('--data_path', type=str, required=False, help="Path to the input data file",
+                        default="database/cleaned_data.csv")
+    parser.add_argument('--output_dir', type=str, required=False, help="Directory to save the output",
+                        default="out_put/multi")
+    parser.add_argument('--ckpt_dir', type=str, required=False, help="Directory to save the checkpoints",
+                        default="ckpt")
+    parser.add_argument('--window_sizes', type=list, help="Window size for first dimension", default=[5, 10, 15])
+    parser.add_argument('--N_pairs', "-n", type=int, help="Window size for first dimension", default=3)
+    parser.add_argument('--generators', "-gens", type=list, help="Window size for first dimension",
+                        default=["gru", "lstm", "transformer"])
+    parser.add_argument('--discriminators', "-discs", type=list, help="Window size for first dimension", default=None)
     parser.add_argument('--distill', type=bool, help="Whether to do distillation", default=True)
-    parser.add_argument('--device', type=int, help="Window size for third dimension", default=0)
+    parser.add_argument('--device', type=list, help="Device sets", default=[0])
 
-    parser.add_argument('--num_epoch', type=int, help="epoch", default=1024)
+    parser.add_argument('--num_epochs', type=int, help="epoch", default=1024)
+    parser.add_argument('--lr', type=int, help="initial learning rate", default=5e-5)
     parser.add_argument('--batch_size', type=int, help="Batch size for training", default=64)
     parser.add_argument('--train_split', type=float, help="Train-test split ratio", default=0.8)
     parser.add_argument('--random_seed', type=int, help="Random seed for reproducibility", default=3407)
@@ -88,16 +92,4 @@ if __name__ == "__main__":
     print("===============================================")
 
     # 调用run_experiments函数
-    run_experiments(
-        data_path=args.data_path,
-        output_dir=args.output_dir,
-        window_size1=args.window_size1,
-        window_size2=args.window_size2,
-        window_size3=args.window_size3,
-        distill=args.distill,
-        num_epoch=args.num_epoch,
-        batch_size=args.batch_size,
-        train_split=args.train_split,
-        random_seed=args.random_seed,
-        device=args.device
-    )
+    run_experiments(args)

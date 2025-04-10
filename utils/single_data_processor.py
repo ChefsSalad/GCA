@@ -21,7 +21,6 @@ def load_data(data_path,target_column,feature_columns,train_split):
 
     y = data.iloc[:,target_column].values  # 获取多个目标字段
 
-
     # Feature selection
     x = data.iloc[:, feature_columns].values
     #y = data['y'].values.reshape(-1, 1)

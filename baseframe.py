@@ -1,7 +1,4 @@
-import numpy as np
-import torch
-
-from model1 import *
+from models.model1 import *
 from utils.single_data_processor import *
 from utils.baseframe_trainer import *
 import random

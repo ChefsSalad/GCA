@@ -1,8 +1,6 @@
-import numpy as np
-import torch
 from torch.utils.data import DataLoader, TensorDataset
 import random
-from model import *
+from models.model import *
 from utils.cross_data_processor import *
 from utils.multiGAN_trainer import  *
 
@@ -41,8 +39,6 @@ def triple_gan_all_pipeline(
     # 1. Data Loading & Preprocessing
     train_x, test_x,train_y,test_y,y_scaler= load_data_all(data_path,target_columns,feature_columns,train_split)
 
-
-
     # 3. Sliding Window Processing
     train_x1, train_y1, train_y_gan1 = create_sequences_combine(train_x, train_y, window_size1,window_size3)  # 生成训练集序列数据1
     train_x2, train_y2, train_y_gan2 = create_sequences_combine(train_x, train_y, window_size2,window_size3)  # 生成训练集序列数据2
@@ -55,6 +51,8 @@ def triple_gan_all_pipeline(
     test_x3, test_y3, test_y_gan3 = create_sequences_combine(test_x, test_y, window_size3,window_size3)  # 生成测试集序列数据3
     print('initializing model...')
     # 4. Model Training
+    print(train_x.shape, train_y.shape)
+
     modelG1 = Generator_gru(train_x1.shape[-1],train_y1.shape[-1]).to(device)
     modelG2 = Generator_lstm(train_x2.shape[-1],train_y2.shape[-1]).to(device)
     modelG3 = Generator_transformer(train_x.shape[-1],output_len=train_y.shape[-1]).to(device)

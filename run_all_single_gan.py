@@ -67,7 +67,7 @@ def run_multiple_experiments(data_path, output_dir,  window_size, model,batch_si
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run multiple experiments for GAN training.')
-    parser.add_argument('--data_path', type=str, default="database/GT_Npdc_market_with_originalGT.csv")
+    parser.add_argument('--data_path', type=str, default="database/cleaned_data.csv")
     parser.add_argument('--output_dir', type=str, default='out_put/4_all')
     parser.add_argument('--window_size', type=int, default=5)
     parser.add_argument('--max_window', type=int, default=15)

@@ -1,9 +1,7 @@
 import os
-import numpy as np
-import torch
 from torch.utils.data import DataLoader, TensorDataset
 import random
-from model1 import *
+from models.model1 import *
 from utils.cross_data_processor import *
 from utils.cross_GAN_trainer import train_dual_gan
 
