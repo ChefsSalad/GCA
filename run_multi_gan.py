@@ -21,8 +21,8 @@ def run_experiments(args):
                           device=args.device,
                           seed=args.random_seed)
 
-    # feature_columns = list(range(2,56))
-    feature_columns = []
+    feature_columns = list(range(2, 24))
+    # feature_columns = []
     # feature_columns = list(range(35,36))
     # target_columns = [[i] for i in range(1, 22)]
     target_columns = [list(range(1, 2))]
@@ -65,23 +65,24 @@ if __name__ == "__main__":
     # 使用argparse解析命令行参数
     parser = argparse.ArgumentParser(description="Run experiments for triple GAN model")
     parser.add_argument('--data_path', type=str, required=False, help="Path to the input data file",
-                        default="database/cleaned_data.csv")
+                        default="database/process_工商银行.csv")
     parser.add_argument('--output_dir', type=str, required=False, help="Directory to save the output",
                         default="out_put/multi")
     parser.add_argument('--ckpt_dir', type=str, required=False, help="Directory to save the checkpoints",
                         default="ckpt")
-    parser.add_argument('--window_sizes', type=list, help="Window size for first dimension", default=[5, 10, 15])
-    parser.add_argument('--N_pairs', "-n", type=int, help="Window size for first dimension", default=3)
+    parser.add_argument('--window_sizes', type=list, help="Window size for first dimension", default=[5,])
+    parser.add_argument('--N_pairs', "-n", type=int, help="Window size for first dimension", default=1)
     parser.add_argument('--generators', "-gens", type=list, help="Window size for first dimension",
-                        default=["gru", "lstm", "transformer"])
+                        default=["gru",])
+                        # default=["gru", "lstm", "transformer"])
     parser.add_argument('--discriminators', "-discs", type=list, help="Window size for first dimension", default=None)
     parser.add_argument('--distill', type=bool, help="Whether to do distillation", default=True)
     parser.add_argument('--device', type=list, help="Device sets", default=[0])
 
-    parser.add_argument('--num_epochs', type=int, help="epoch", default=1024)
-    parser.add_argument('--lr', type=int, help="initial learning rate", default=5e-5)
+    parser.add_argument('--num_epochs', type=int, help="epoch", default=10000)
+    parser.add_argument('--lr', type=int, help="initial learning rate", default=2e-4)
     parser.add_argument('--batch_size', type=int, help="Batch size for training", default=64)
-    parser.add_argument('--train_split', type=float, help="Train-test split ratio", default=0.8)
+    parser.add_argument('--train_split', type=float, help="Train-test split ratio", default=0.7)
     parser.add_argument('--random_seed', type=int, help="Random seed for reproducibility", default=3407)
 
     args = parser.parse_args()

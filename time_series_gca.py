@@ -99,12 +99,12 @@ class GCA_time_series(GCABase):
         data = pd.read_csv(data_path)
 
         # Select target columns
-        y = data.iloc[:, target_columns].values
+        y = data.iloc[:2400, target_columns].values
         target_column_names = data.columns[target_columns]
         print("Target columns:", target_column_names)
 
         # Select feature columns
-        x = data.iloc[:, feature_columns].values
+        x = data.iloc[:2400, feature_columns].values
         feature_column_names = data.columns[feature_columns]
         print("Feature columns:", feature_column_names)
 
@@ -182,7 +182,7 @@ class GCA_time_series(GCABase):
             dataloader = DataLoader(
                 TensorDataset(x, y_gan),
                 batch_size=self.batch_size,
-                shuffle=shuffle_flag,
+                shuffle=False,
                 generator=torch.manual_seed(self.seed)
             )
             self.dataloaders.append(dataloader)

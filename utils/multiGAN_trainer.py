@@ -5,6 +5,8 @@ import copy
 from .evaluate_visualization import *
 import torch.optim.lr_scheduler as lr_scheduler
 import time
+import torch.nn.functional as F
+from torch.nn.utils import clip_grad_norm_
 
 
 def train_multi_gan(generators, discriminators, dataloaders,
@@ -109,7 +111,7 @@ def train_multi_gan(generators, discriminators, dataloaders,
         # use the gap the equalize the length of different generators
         gaps = [window_sizes[-1] - window_sizes[i] for i in range(N - 1)]
 
-        for batch_idx, (x_last, y_last) in enumerate(dataloaders[-1]):
+        for batch_idx, (x_last, y_last) in enumerate(dataloaders[2]):
             # TODO: maybe try to random select a gap from the whole time windows
             x_last = x_last.to(device)
             y_last = y_last.to(device)
@@ -159,6 +161,7 @@ def train_multi_gan(generators, discriminators, dataloaders,
 
             for i in range(N):
                 optimizers_D[i].step()
+            for i in range(N):
                 discriminators[i].eval()
                 generators[i].train()
 
@@ -193,13 +196,13 @@ def train_multi_gan(generators, discriminators, dataloaders,
         improved = [False] * 3
         for i in range(N):
 
-            hists_dict[val_loss_keys[i]][epoch] = validate(generators[i], val_xes[i], val_y[i])
+            hists_dict[val_loss_keys[i]][epoch] = validate(generators[i], val_xes[i], val_y)
 
             if hists_dict[val_loss_keys[i]][epoch].item() < best_mse[i]:
                 best_mse[i] = hists_dict[val_loss_keys[i]][epoch]
                 best_model_state[i] = copy.deepcopy(generators[i].state_dict())
                 best_epoch[i] = epoch + 1
-                improved[0] = True
+                improved[i] = True
 
             schedulers[i].step(hists_dict[val_loss_keys[i]][epoch])
 
@@ -304,6 +307,7 @@ def discriminate_fake(X, Y,
         # 拼接之后可以让生成的假数据，既包含假数据又包含真数据，
         fake_data_temp_G = [torch.cat([y[:, :window_size, :], fake_data.reshape(-1, 1, target_num)], axis=1)
                             for (y, window_size, fake_data) in zip(Y, window_sizes, fake_data_temp_G)]
+
     elif mode == "train_G":
         # 拼接之后可以让生成的假数据，既包含假数据又包含真数据，
         fake_data_temp_G = [torch.cat([y[:, :window_size, :], fake_data.reshape(-1, 1, target_num)], axis=1)
@@ -336,7 +340,7 @@ def discriminate_fake(X, Y,
 
     if mode == "train_D":
         loss_matrix = torch.zeros(N, N + 1, device=device)  # device 取决于你的模型位置
-        weight = weight_matrix  # [N, N+1]
+        weight = weight_matrix.clone().detach()  # [N, N+1]
         for i in range(N):
             for j in range(N + 1):
                 if j < N:
@@ -345,28 +349,32 @@ def discriminate_fake(X, Y,
                     loss_matrix[i, j] = dis_fake_outputD[i][j]
     elif mode == "train_G":
         loss_matrix = torch.zeros(N, N, device=device)  # device 取决于你的模型位置
-        weight = weight_matrix[:, :-1]  # [N, N]
+        weight = weight_matrix[:, :-1].clone().detach()  # [N, N]
         for i in range(N):
             for j in range(N):
-                loss_matrix[i, j] = criterion(dis_fake_outputD[i][j], real_labels[i])
+                loss_matrix[i, j] = criterion(dis_fake_outputD[j][i], real_labels[j])
 
     loss_DorG = torch.multiply(weight, loss_matrix).sum(dim=1)  # [N, N] --> [N, ]
+
 
     if mode == "train_G":
         loss_mse_G = [F.mse_loss(fake_data.squeeze(), y[:, -1, :].squeeze()) for (fake_data, y) in zip(fake_data_G, Y)]
         loss_matrix = loss_mse_G
         loss_DorG = loss_DorG + torch.stack(loss_matrix).to(device)
 
+    # for i in range(N):
+    #     print(loss_DorG[i])
+
     return loss_DorG, loss_matrix
 
 
-def do_distill(rank, generators, dataloaders, optimizers, window_sizes, device):
+def do_distill(rank, generators, dataloaders,optimizers,window_sizes,device):
     teacher_generator = generators[rank[0]]  # Teacher generator is ranked first
     student_generator = generators[rank[-1]]  # Student generator is ranked last
     student_optimizer = optimizers[rank[-1]]
     teacher_generator.eval()
     student_generator.train()
-    # term of teacher is longer
+    #term of teacher is longer
     if window_sizes[rank[0]] > window_sizes[rank[-1]]:
         distill_dataloader = dataloaders[rank[0]]
     else:
@@ -375,14 +383,14 @@ def do_distill(rank, generators, dataloaders, optimizers, window_sizes, device):
     # Distillation process: Teacher generator to Student generator
     for batch_idx, (x, y) in enumerate(distill_dataloader):
 
-        y = y[:, -1, :]
-        y = y.to(device)
-        if gap > 0:
-            x_teacher = x
-            x_student = x[:, gap:, :]
+        y=y[:,-1,:]
+        y=y.to(device)
+        if gap>0:
+            x_teacher=x
+            x_student=x[:,gap:,:]
         else:
-            x_teacher = x[:, (-1) * gap:, :]
-            x_student = x
+            x_teacher=x[:,(-1)*gap:,:]
+            x_student=x
         x_teacher = x_teacher.to(device)
         x_student = x_student.to(device)
 

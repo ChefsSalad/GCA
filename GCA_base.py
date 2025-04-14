@@ -63,11 +63,20 @@ class GCABase(ABC):
 
         :param seed: 随机种子
         """
-        random.seed(seed)
-        np.random.seed(seed)
+        print("Random seed set:", seed)
         torch.manual_seed(seed)
-        if torch.cuda.is_available():
-            torch.cuda.manual_seed_all(seed)
+        np.random.seed(seed)
+        random.seed(seed)
+        os.environ["PYTHONHASHSEED"] = "0"
+
+        torch.backends.cudnn.deterministic = True  # 启用确定性算法
+        torch.backends.cudnn.benchmark = False  # 关闭自动优化
+
+    def seed_worker(self, worker_id):
+        base_seed = torch.initial_seed() % 2 ** 32
+        worker_seed = base_seed  # 差异化种子
+        np.random.seed(worker_seed)
+        random.seed(worker_seed)
 
     @abstractmethod
     def process_data(self):
